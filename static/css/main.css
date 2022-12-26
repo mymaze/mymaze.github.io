@@ -1,0 +1,48 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    text-align: center;
+}
+
+table tr th {
+    padding: 10px;
+}
+
+table tr td {
+    padding: 10px;
+}
+
+ul li {
+    list-style: none;
+}
+
+button {
+    width: 100%;
+    cursor: pointer;
+}
+
+canvas {
+    border: black solid;
+}
+
+.options {
+    position: absolute;
+    top: 15rem;
+    left: 5rem;
+}
+
+.legend {
+    position: absolute;
+    top: 15rem;
+    right: 15rem;
+}
+
+.legend span {
+    width: 20px;
+    height: 20px;
+    border: gray 1px solid;
+    display: inline-block;
+}

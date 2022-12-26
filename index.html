@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>我的迷宫</title>
+    <link rel="icon" href="static/img/favicon.png">
+    <link rel="stylesheet" href="static/css/main.css">
+</head>
+<body>
+
+<div id="options" class="options">
+    <table border="1">
+        <tr>
+            <th>玩法</th>
+            <th>程度</th>
+        </tr>
+        <tr>
+            <td><label><input type="checkbox" checked disabled>方块大小</label></td>
+            <td><label>调整 <input type="number" min="5" max="100" value="20" id="diamondSize"> px</label></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <button id="startBtn">开始</button>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div id="legend" class="legend">
+    <ul>
+        <li><span style="background-color: black"></span> 围墙</li>
+        <li><span style="background-color: white"></span> 道路</li>
+        <li><span style="background-color: green"></span> 出口</li>
+        <li><span style="background-color: blue"></span> 玩家</li>
+    </ul>
+</div>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>

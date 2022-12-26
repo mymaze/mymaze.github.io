@@ -1,2 +1,7 @@
 # mymaze.github.io
-My maze game
+
+> 我的迷宫游戏
+
+### 预览图
+
+![preview.png](static/img/preview.png)
