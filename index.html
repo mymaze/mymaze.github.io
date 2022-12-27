@@ -8,24 +8,36 @@
 </head>
 <body>
 
-<div id="options" class="options">
+<canvas id="canvas"></canvas>
+<canvas id="mask"></canvas>
+
+<div id="options">
     <form id="gameForm" onsubmit="return startGame()">
         <table border="1">
+            <tr>
+                <td colspan="2">按 Esc / Tab 键弹出/关闭此选择框</td>
+            </tr>
             <tr>
                 <th>玩法</th>
                 <th>程度</th>
             </tr>
             <tr>
                 <td><label><input type="checkbox" checked disabled> 方块大小</label></td>
-                <td><label>调整 <input type="number" min="5" max="100" value="20" required id="diamondSize"> px</label></td>
+                <td><label>调整 <input type="number" min="5" max="100" value="20" required id="diamondSize"> px</label>
+                </td>
             </tr>
             <tr>
                 <td><label><input type="checkbox" id="randomTransferCheckBox"> 随机传送</label></td>
-                <td><label>放置 <input type="number" min="1" max="10" value="3" id="randomTransferCount"> 个</label></td>
+                <td><label>放置 <input type="number" min="1" max="10" value="3" id="randomTransferCount"> 个</label>
+                </td>
             </tr>
             <tr>
                 <td><label><input type="checkbox" id="convertCheckBox"> 变幻莫测</label></td>
                 <td><label>间隔 <input type="number" min="1" max="60" value="10" id="convertSecond"> 秒</label></td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" id="nightCheckBox"> 黑夜降临</label></td>
+                <td><label>视野 <input type="number" min="1" max="15" value="5" id="nightGrid"> 格</label></td>
             </tr>
             <tr>
                 <td colspan="2">
@@ -33,19 +45,41 @@
                 </td>
             </tr>
         </table>
+
+        <table border="1">
+            <tr>
+                <td colspan="2">WASD / ↑↓←→ 移动</td>
+            </tr>
+            <tr>
+                <th>颜色</th>
+                <th>描述</th>
+            </tr>
+            <tr>
+                <td><input type="color" value="#808080" id="color-1"></td>
+                <td>蒙版</td>
+            </tr>
+            <tr>
+                <td><input type="color" value="#000000" id="color0"></td>
+                <td>围墙</td>
+            </tr>
+            <tr>
+                <td><input type="color" value="#FFFFFF" id="color1"></td>
+                <td>道路</td>
+            </tr>
+            <tr>
+                <td><input type="color" value="#FFFF00" id="color2"></td>
+                <td>传送</td>
+            </tr>
+            <tr>
+                <td><input type="color" value="#00FF00" id="color3"></td>
+                <td>出口</td>
+            </tr>
+            <tr>
+                <td><input type="color" value="#0000FF" id="color5"></td>
+                <td>玩家</td>
+            </tr>
+        </table>
     </form>
-</div>
-
-<canvas id="canvas"></canvas>
-
-<div id="legend" class="legend">
-    <ul>
-        <li><span style="background-color: black"></span> 围墙</li>
-        <li><span style="background-color: white"></span> 道路</li>
-        <li><span style="background-color: yellow"></span> 传送</li>
-        <li><span style="background-color: green"></span> 出口</li>
-        <li><span style="background-color: blue"></span> 玩家</li>
-    </ul>
 </div>
 
 <script src="static/js/main.js"></script>

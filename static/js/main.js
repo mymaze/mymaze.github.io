@@ -1,20 +1,27 @@
 const
     canvas = document.getElementById("canvas"),
-    context = canvas.getContext("2d");
+    canvasContext = canvas.getContext("2d"),
+    mask = document.getElementById("mask"),
+    maskContext = mask.getContext("2d");
 
 const
+    options = document.getElementById("options"),
     diamondSize = document.getElementById("diamondSize"),
     randomTransferCheckBox = document.getElementById("randomTransferCheckBox"),
     randomTransferCount = document.getElementById("randomTransferCount"),
     convertCheckBox = document.getElementById("convertCheckBox"),
-    convertSecond = document.getElementById("convertSecond");
+    convertSecond = document.getElementById("convertSecond"),
+    nightCheckBox = document.getElementById("nightCheckBox"),
+    nightGrid = document.getElementById("nightGrid");
 
-const
-    WALL = 0,
-    ROAD = 1,
-    TRANSFER = 2,
-    EXIT = 3,
-    PLAYER = 5;
+const INFO = {
+    MASK: -1,
+    WALL: 0,
+    ROAD: 1,
+    TRANSFER: 2,
+    EXIT: 3,
+    PLAYER: 5
+}
 
 let maze = null;
 
@@ -32,45 +39,61 @@ function startGame() {
         interval = parseInt(convertSecond.value);
     }
 
-    let side = Math.floor((window.innerHeight - space * 2) / space);
-    side = side % 2 ? side : side - 1;
+    let viewGrid = 0;
+    if (nightCheckBox.checked) {
+        viewGrid = parseInt(nightGrid.value);
+    }
+
+    let row = Math.floor((window.innerHeight - space * 2) / space);
+    row = row % 2 ? row : row - 1;
+    let col = Math.floor((window.innerWidth - space * 2) / space);
+    col = col % 2 ? col : col - 1;
 
     canvas.style.borderWidth = space + "px";
-    canvas.width = side * space;
-    canvas.height = side * space;
+    canvas.width = col * space;
+    canvas.height = row * space;
+
+    mask.style.borderWidth = space + "px";
+    mask.width = col * space;
+    mask.height = row * space;
+
+    let legend = {};
+    for (let key in INFO) {
+        legend[INFO[key]] = document.getElementById("color" + INFO[key]).value;
+    }
 
     if (maze) maze.stop();
-    maze = new Maze(context, side, side, space, transferCount, interval);
+    maze = new Maze(canvasContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid);
     maze.start();
+
+    options.style.display = "none";
+    canvas.style.display = "block";
+    mask.style.display = "block";
 
     return false;
 }
 
 class Maze {
-    constructor(context, row, col, space, transferCount, interval) {
-        this.context = context;
+    constructor(mapContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid) {
+        this.mapContext = mapContext;
+        this.maskContext = maskContext;
         this.y = row;
         this.x = col;
         this.space = space;
+        this.legend = legend;
         this.transferCount = transferCount;
         this.interval = interval;
+        this.viewGrid = viewGrid;
 
         this.dir = [[-1, 0], [0, 1], [1, 0], [0, -1]];
         this.now = [0, 0];
         this.end = [col - 1, row - 1];
         this.map = [];
         this.timer = null;
-        this.legend = {
-            [WALL]: "black",
-            [ROAD]: "white",
-            [TRANSFER]: "yellow",
-            [EXIT]: "green",
-            [PLAYER]: "blue"
-        }
     }
 
     resetMap() {
-        this.map = Array(this.y).fill().map(() => Array(this.x).fill(WALL));
+        this.map = Array(this.y).fill().map(() => Array(this.x).fill(INFO.WALL));
     }
 
     getMap(xy) {
@@ -94,15 +117,15 @@ class Maze {
     }
 
     setStartAndEnd() {
-        if (!this.interval) {
+        if (!this.timer) {
             let corner = [[0, 0], [this.x - 1, 0], [0, this.y - 1], [this.x - 1, this.y - 1]];
 
             this.now = corner.splice(this.random(0, corner.length - 1), 1)[0];
             this.end = corner.splice(this.random(0, corner.length - 1), 1)[0];
         }
 
-        this.setMap(this.now, PLAYER);
-        this.setMap(this.end, EXIT);
+        this.setMap(this.now, INFO.PLAYER);
+        this.setMap(this.end, INFO.EXIT);
     }
 
     setRandomTransfer() {
@@ -111,11 +134,11 @@ class Maze {
         let count = 0;
         while (count !== this.transferCount) {
             let transferXY = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
-            if (this.getMap(transferXY) === WALL) {
+            if (this.getMap(transferXY) === INFO.WALL) {
                 for (let curDir of this.dir) {
                     let diamond = this.turnTo(transferXY, curDir);
-                    if (this.isSecurityScope(diamond) && this.getMap(diamond) === ROAD) {
-                        this.setMap(transferXY, TRANSFER);
+                    if (this.isSecurityScope(diamond) && this.getMap(diamond) === INFO.ROAD) {
+                        this.setMap(transferXY, INFO.TRANSFER);
                         count++;
                         break;
                     }
@@ -137,7 +160,7 @@ class Maze {
                 stack.push(wall);
             }
         }
-        this.setMap(this.now, ROAD);
+        this.setMap(this.now, INFO.ROAD);
 
         while (stack.length > 0) {
             let curWall = stack.splice(this.random(0, stack.length - 1), 1)[0];
@@ -154,8 +177,8 @@ class Maze {
                 let revDir = check.pop();
                 let newRoad = this.turnTo(curWall, revDir);
 
-                this.setMap(curWall, ROAD);
-                this.setMap(newRoad, ROAD);
+                this.setMap(curWall, INFO.ROAD);
+                this.setMap(newRoad, INFO.ROAD);
 
                 for (let curDir of this.dir) {
                     let newWall = this.turnTo(newRoad, curDir);
@@ -175,19 +198,22 @@ class Maze {
                 case 2:
                     while (true) {
                         nextPos = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
-                        if (this.getMap(nextPos) === ROAD) break;
+                        if (this.getMap(nextPos) === INFO.ROAD) break;
                     }
                     break;
                 case 3:
                     this.stop();
                     if (confirm("恭喜通关！\n是否继续以当前设置开始新的迷宫？")) {
+                        this.stop();
                         this.start();
+                    } else {
+                        options.style.display = "block";
                     }
                     return;
             }
 
-            this.setMap(this.now, ROAD);
-            this.setMap(nextPos, PLAYER);
+            this.setMap(this.now, INFO.ROAD);
+            this.setMap(nextPos, INFO.PLAYER);
             this.now = nextPos;
 
             this.draw();
@@ -197,25 +223,36 @@ class Maze {
     draw() {
         for (let y = 0; y < this.map.length; y++) {
             for (let x = 0; x < this.map[y].length; x++) {
-                this.context.fillStyle = this.legend[this.getMap([x, y])];
-                this.context.fillRect(x * this.space, y * this.space, this.space, this.space);
+                this.mapContext.fillStyle = this.legend[this.getMap([x, y])];
+                this.mapContext.fillRect(x * this.space, y * this.space, this.space, this.space);
             }
+        }
+
+        if (this.viewGrid) {
+            let viewX = this.now[0] - this.viewGrid;
+            let viewY = this.now[1] - this.viewGrid;
+
+            this.maskContext.fillStyle = this.legend[INFO.MASK];
+            this.maskContext.fillRect(0, 0, this.x * this.space, this.y * this.space);
+            this.maskContext.clearRect(viewX * this.space, viewY * this.space, (this.viewGrid * 2 + 1) * this.space, (this.viewGrid * 2 + 1) * this.space);
         }
     }
 
     start() {
-        if (this.interval) {
-            this.timer = setTimeout(() => this.start(), this.interval * 1000);
-        }
         this.resetMap();
         this.prim();
         this.setStartAndEnd();
         this.setRandomTransfer();
         this.draw();
+
+        if (this.interval) {
+            this.timer = setTimeout(() => this.start(), this.interval * 1000);
+        }
     }
 
     stop() {
         clearTimeout(this.timer);
+        this.timer = null;
     }
 }
 
@@ -243,6 +280,10 @@ window.addEventListener("keydown", (event) => {
         case "ArrowRight":
             // Handle "turn right"
             maze.move([1, 0]);
+            break;
+        case "Tab":
+        case "Escape":
+            options.style.display = options.style.display === "none" ? "block" : "none";
             break;
     }
 

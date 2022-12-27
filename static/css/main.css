@@ -1,10 +1,11 @@
-* {
-    margin: 0;
-    padding: 0;
+body {
+    overflow: hidden;
 }
 
-body {
+table {
+    background-color: white;
     text-align: center;
+    float: left;
 }
 
 table tr th {
@@ -15,34 +16,23 @@ table tr td {
     padding: 10px;
 }
 
-ul li {
-    list-style: none;
-}
-
-button {
-    width: 100%;
-    cursor: pointer;
+table tr td div {
+    width: 2rem;
+    height: 1rem;
 }
 
 canvas {
     border: black solid;
-}
-
-.options {
     position: absolute;
-    top: 15rem;
-    left: 5rem;
+    display: none;
 }
 
-.legend {
-    position: absolute;
-    top: 15rem;
-    right: 15rem;
+a {
+    text-decoration-line: none;
+    float: right;
 }
 
-.legend span {
-    width: 20px;
-    height: 20px;
-    border: gray 1px solid;
-    display: inline-block;
+#options {
+    position: relative;
+    left: 35%;
 }
