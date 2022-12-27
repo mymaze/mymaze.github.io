@@ -9,21 +9,27 @@
 <body>
 
 <div id="options" class="options">
-    <table border="1">
-        <tr>
-            <th>玩法</th>
-            <th>程度</th>
-        </tr>
-        <tr>
-            <td><label><input type="checkbox" checked disabled>方块大小</label></td>
-            <td><label>调整 <input type="number" min="5" max="100" value="20" id="diamondSize"> px</label></td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <button id="startBtn">开始</button>
-            </td>
-        </tr>
-    </table>
+    <form id="gameForm" onsubmit="return startGame()">
+        <table border="1">
+            <tr>
+                <th>玩法</th>
+                <th>程度</th>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" checked disabled> 方块大小</label></td>
+                <td><label>调整 <input type="number" min="5" max="100" value="20" required id="diamondSize" name="size"> px</label></td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" id="randomTransferCheckBox"> 随机传送</label></td>
+                <td><label>放置 <input type="number" min="1" max="10" value="3" id="randomTransferCount" name="count"> 个</label></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="submit" value="开始游戏">
+                </td>
+            </tr>
+        </table>
+    </form>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -32,6 +38,7 @@
     <ul>
         <li><span style="background-color: black"></span> 围墙</li>
         <li><span style="background-color: white"></span> 道路</li>
+        <li><span style="background-color: yellow"></span> 传送</li>
         <li><span style="background-color: green"></span> 出口</li>
         <li><span style="background-color: blue"></span> 玩家</li>
     </ul>
