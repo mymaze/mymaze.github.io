@@ -1,8 +1,6 @@
 const
     canvas = document.getElementById("canvas"),
-    canvasContext = canvas.getContext("2d"),
-    mask = document.getElementById("mask"),
-    maskContext = mask.getContext("2d");
+    canvasContext = canvas.getContext("2d");
 
 const
     options = document.getElementById("options"),
@@ -14,7 +12,9 @@ const
     nightCheckBox = document.getElementById("nightCheckBox"),
     nightGrid = document.getElementById("nightGrid"),
     monsterCheckBox = document.getElementById("monsterCheckBox"),
-    monsterCount = document.getElementById("monsterCount");
+    monsterCount = document.getElementById("monsterCount"),
+    extendCheckBox = document.getElementById("extendCheckBox"),
+    extendMultiple = document.getElementById("extendMultiple");
 
 const INFO = {
     MASK: -1,
@@ -28,6 +28,13 @@ const INFO = {
 
 let maze = null;
 
+convertCheckBox.onclick = function () {
+    extendCheckBox.checked = false;
+}
+
+extendCheckBox.onclick = function () {
+    convertCheckBox.checked = false;
+}
 
 function startGame() {
     let legend = {};
@@ -42,42 +49,41 @@ function startGame() {
     let col = Math.floor((window.innerWidth - space * 2) / space);
     col = col % 2 ? col : col - 1;
 
-    canvas.style.border = `${legend[INFO.WALL]} ${space}px solid`;
+    canvas.style.border = `white ${space}px solid`;
     canvas.width = col * space;
     canvas.height = row * space;
 
-    mask.style.border = `${legend[INFO.WALL]} ${space}px solid`;
-    mask.width = col * space;
-    mask.height = row * space;
-
+    let multiple = extendCheckBox.checked ? parseInt(extendMultiple.value) : 1;
     let interval = convertCheckBox.checked ? parseInt(convertSecond.value) : 0;
     let transferCount = randomTransferCheckBox.checked ? limit(row, col, parseInt(randomTransferCount.value)) : 0;
     let viewGrid = nightCheckBox.checked ? limit(row, col, parseInt(nightGrid.value)) : 0;
     let monsters = monsterCheckBox.checked ? limit(row, col, parseInt(monsterCount.value)) : 0;
 
     if (maze) maze.stop();
-    maze = new Maze(canvasContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid, monsters);
+    maze = new Maze(canvas, canvasContext, row, col, space, legend, transferCount, interval, viewGrid, monsters, multiple);
     maze.start();
 
     options.style.display = "none";
     canvas.style.display = "block";
-    mask.style.display = "block";
 
     return false;
 }
 
 class Maze {
-    constructor(mapContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid, monsters) {
+    constructor(mapCanvas, mapContext, row, col, space, legend, transferCount, interval, viewGrid, monsters, multiple) {
+        this.mapCanvas = mapCanvas;
         this.mapContext = mapContext;
-        this.maskContext = maskContext;
         this.y = row;
         this.x = col;
+        this.row = row;
+        this.col = col;
         this.space = space;
         this.legend = legend;
         this.transferCount = transferCount;
         this.interval = interval;
         this.viewGrid = viewGrid;
         this.monsters = monsters;
+        this.multiple = multiple;
 
         this.dir = [[-1, 0], [0, 1], [1, 0], [0, -1]];
         this.now = [0, 0];
@@ -88,6 +94,12 @@ class Maze {
     }
 
     resetMap() {
+        if (this.multiple > 1) {
+            let extendRow = this.y * this.multiple;
+            let extendCol = this.x * this.multiple;
+            this.y = extendRow % 2 ? extendRow : extendRow - 1;
+            this.x = extendCol % 2 ? extendCol : extendCol - 1;
+        }
         this.map = Array(this.y).fill().map(() => Array(this.x).fill(INFO.WALL));
     }
 
@@ -105,6 +117,10 @@ class Maze {
 
     random(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    randomXY() {
+        return [this.random(0, this.x - 1), this.random(0, this.y - 1)];
     }
 
     isSecurityScope(xy) {
@@ -128,7 +144,7 @@ class Maze {
 
         let count = 0;
         while (count !== this.transferCount) {
-            let transferXY = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
+            let transferXY = this.randomXY();
             if (this.getMap(transferXY) === INFO.WALL) {
                 for (let curDir of this.dir) {
                     let diamond = this.turnTo(transferXY, curDir);
@@ -147,7 +163,7 @@ class Maze {
 
         let i = 0;
         while (i !== this.monsters) {
-            let monsterXY = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
+            let monsterXY = this.randomXY();
             if (this.getMap(monsterXY) === INFO.ROAD) {
                 this.setMap(monsterXY, INFO.MONSTER);
                 this.monsterQueue[i] = setTimeout(((who) => this.monsterMove(who, monsterXY))(i), 1000);
@@ -206,7 +222,7 @@ class Maze {
             switch (this.getMap(nextPos)) {
                 case INFO.TRANSFER:
                     while (true) {
-                        nextPos = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
+                        nextPos = this.randomXY();
                         if (this.getMap(nextPos) === INFO.ROAD) break;
                     }
                     break;
@@ -299,20 +315,51 @@ class Maze {
     }
 
     draw() {
-        for (let y = 0; y < this.map.length; y++) {
-            for (let x = 0; x < this.map[y].length; x++) {
-                this.mapContext.fillStyle = this.legend[this.getMap([x, y])];
-                this.mapContext.fillRect(x * this.space, y * this.space, this.space, this.space);
-            }
+        let viewX, viewY;
+        let halfCol = Math.ceil(this.col / 2);
+        let halfRow = Math.ceil(this.row / 2);
+
+        if (this.now[0] < halfCol) {
+            viewX = 0;
+            this.mapCanvas.style.borderLeftColor = this.legend[INFO.WALL];
+        } else if (this.now[0] > this.x - halfCol) {
+            viewX = this.x - this.col;
+            this.mapCanvas.style.borderRightColor = this.legend[INFO.WALL];
+        } else {
+            viewX = this.now[0] - halfCol;
+            this.mapCanvas.style.borderRightColor = "white";
+            this.mapCanvas.style.borderLeftColor = "white";
         }
 
-        if (this.viewGrid) {
-            let viewX = this.now[0] - this.viewGrid;
-            let viewY = this.now[1] - this.viewGrid;
+        if (this.now[1] < halfRow) {
+            viewY = 0;
+            this.mapCanvas.style.borderTopColor = this.legend[INFO.WALL];
+        } else if (this.now[1] > this.y - halfRow) {
+            viewY = this.y - this.row;
+            this.mapCanvas.style.borderBottomColor = this.legend[INFO.WALL];
+        } else {
+            viewY = this.now[1] - halfRow;
+            this.mapCanvas.style.borderTopColor = "white";
+            this.mapCanvas.style.borderBottomColor = "white";
+        }
 
-            this.maskContext.fillStyle = this.legend[INFO.MASK];
-            this.maskContext.fillRect(0, 0, this.x * this.space, this.y * this.space);
-            this.maskContext.clearRect(viewX * this.space, viewY * this.space, (this.viewGrid * 2 + 1) * this.space, (this.viewGrid * 2 + 1) * this.space);
+        for (let y = 0; y < this.row; y++) {
+            for (let x = 0; x < this.col; x++) {
+                let mapX = x + viewX;
+                let mapY = y + viewY;
+                if (
+                    this.viewGrid
+                    && (mapX < (this.now[0] - this.viewGrid)
+                        || mapX > (this.now[0] + this.viewGrid)
+                        || mapY < (this.now[1] - this.viewGrid)
+                        || mapY > (this.now[1] + this.viewGrid)
+                    )) {
+                    this.mapContext.fillStyle = this.legend[INFO.MASK];
+                } else {
+                    this.mapContext.fillStyle = this.legend[this.getMap([mapX, mapY])];
+                }
+                this.mapContext.fillRect(x * this.space, y * this.space, this.space, this.space);
+            }
         }
     }
 
@@ -332,6 +379,8 @@ class Maze {
     }
 
     stop() {
+        window.removeEventListener("keydown", keyDown, true);
+
         clearTimeout(this.timer);
         this.timer = null;
 
@@ -342,8 +391,6 @@ class Maze {
     }
 
     gameOver(msg) {
-        window.removeEventListener("keydown", keyDown, true);
-
         this.stop();
         if (confirm(msg + "\n是否继续以当前设置开始新的迷宫？")) {
             this.start();

@@ -9,7 +9,6 @@
 <body>
 
 <canvas id="canvas"></canvas>
-<canvas id="mask"></canvas>
 
 <div id="options">
     <form id="gameForm" onsubmit="return startGame()">
@@ -42,6 +41,10 @@
             <tr>
                 <td><label><input type="checkbox" id="monsterCheckBox"> 行尸走肉</label></td>
                 <td><label>感染 <input type="number" min="1" max="99" value="3" id="monsterCount"> 个</label></td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" id="extendCheckBox"> 地图扩展</label></td>
+                <td><label>扩大 <input type="number" min="2" max="10" value="2" id="extendMultiple"> 倍</label></td>
             </tr>
             <tr>
                 <td colspan="2">
