@@ -28,7 +28,7 @@
             </tr>
             <tr>
                 <td><label><input type="checkbox" id="randomTransferCheckBox"> 随机传送</label></td>
-                <td><label>放置 <input type="number" min="1" max="10" value="3" id="randomTransferCount"> 个</label>
+                <td><label>放置 <input type="number" min="1" max="99" value="3" id="randomTransferCount"> 个</label>
                 </td>
             </tr>
             <tr>
@@ -37,7 +37,11 @@
             </tr>
             <tr>
                 <td><label><input type="checkbox" id="nightCheckBox"> 黑夜降临</label></td>
-                <td><label>视野 <input type="number" min="1" max="15" value="5" id="nightGrid"> 格</label></td>
+                <td><label>视野 <input type="number" min="1" max="99" value="5" id="nightGrid"> 格</label></td>
+            </tr>
+            <tr>
+                <td><label><input type="checkbox" id="monsterCheckBox"> 行尸走肉</label></td>
+                <td><label>感染 <input type="number" min="1" max="99" value="3" id="monsterCount"> 个</label></td>
             </tr>
             <tr>
                 <td colspan="2">
@@ -73,6 +77,10 @@
             <tr>
                 <td><input type="color" value="#00FF00" id="color3"></td>
                 <td>出口</td>
+            </tr>
+            <tr>
+                <td><input type="color" value="#FF0000" id="color4"></td>
+                <td>丧尸</td>
             </tr>
             <tr>
                 <td><input type="color" value="#0000FF" id="color5"></td>

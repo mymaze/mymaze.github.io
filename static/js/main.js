@@ -12,7 +12,9 @@ const
     convertCheckBox = document.getElementById("convertCheckBox"),
     convertSecond = document.getElementById("convertSecond"),
     nightCheckBox = document.getElementById("nightCheckBox"),
-    nightGrid = document.getElementById("nightGrid");
+    nightGrid = document.getElementById("nightGrid"),
+    monsterCheckBox = document.getElementById("monsterCheckBox"),
+    monsterCount = document.getElementById("monsterCount");
 
 const INFO = {
     MASK: -1,
@@ -20,6 +22,7 @@ const INFO = {
     ROAD: 1,
     TRANSFER: 2,
     EXIT: 3,
+    MONSTER: 4,
     PLAYER: 5
 }
 
@@ -27,43 +30,33 @@ let maze = null;
 
 
 function startGame() {
+    let legend = {};
+    for (let key in INFO) {
+        legend[INFO[key]] = document.getElementById("color" + INFO[key]).value;
+    }
+
     let space = parseInt(diamondSize.value);
-
-    let transferCount = 0;
-    if (randomTransferCheckBox.checked) {
-        transferCount = parseInt(randomTransferCount.value);
-    }
-
-    let interval = 0;
-    if (convertCheckBox.checked) {
-        interval = parseInt(convertSecond.value);
-    }
-
-    let viewGrid = 0;
-    if (nightCheckBox.checked) {
-        viewGrid = parseInt(nightGrid.value);
-    }
 
     let row = Math.floor((window.innerHeight - space * 2) / space);
     row = row % 2 ? row : row - 1;
     let col = Math.floor((window.innerWidth - space * 2) / space);
     col = col % 2 ? col : col - 1;
 
-    canvas.style.borderWidth = space + "px";
+    canvas.style.border = `${legend[INFO.WALL]} ${space}px solid`;
     canvas.width = col * space;
     canvas.height = row * space;
 
-    mask.style.borderWidth = space + "px";
+    mask.style.border = `${legend[INFO.WALL]} ${space}px solid`;
     mask.width = col * space;
     mask.height = row * space;
 
-    let legend = {};
-    for (let key in INFO) {
-        legend[INFO[key]] = document.getElementById("color" + INFO[key]).value;
-    }
+    let interval = convertCheckBox.checked ? parseInt(convertSecond.value) : 0;
+    let transferCount = randomTransferCheckBox.checked ? limit(row, col, parseInt(randomTransferCount.value)) : 0;
+    let viewGrid = nightCheckBox.checked ? limit(row, col, parseInt(nightGrid.value)) : 0;
+    let monsters = monsterCheckBox.checked ? limit(row, col, parseInt(monsterCount.value)) : 0;
 
     if (maze) maze.stop();
-    maze = new Maze(canvasContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid);
+    maze = new Maze(canvasContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid, monsters);
     maze.start();
 
     options.style.display = "none";
@@ -74,7 +67,7 @@ function startGame() {
 }
 
 class Maze {
-    constructor(mapContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid) {
+    constructor(mapContext, maskContext, row, col, space, legend, transferCount, interval, viewGrid, monsters) {
         this.mapContext = mapContext;
         this.maskContext = maskContext;
         this.y = row;
@@ -84,11 +77,13 @@ class Maze {
         this.transferCount = transferCount;
         this.interval = interval;
         this.viewGrid = viewGrid;
+        this.monsters = monsters;
 
         this.dir = [[-1, 0], [0, 1], [1, 0], [0, -1]];
         this.now = [0, 0];
         this.end = [col - 1, row - 1];
         this.map = [];
+        this.monsterQueue = [];
         this.timer = null;
     }
 
@@ -147,6 +142,20 @@ class Maze {
         }
     }
 
+    setMonsters() {
+        if (!this.monsters) return;
+
+        let i = 0;
+        while (i !== this.monsters) {
+            let monsterXY = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
+            if (this.getMap(monsterXY) === INFO.ROAD) {
+                this.setMap(monsterXY, INFO.MONSTER);
+                this.monsterQueue[i] = setTimeout(((who) => this.monsterMove(who, monsterXY))(i), 1000);
+                i++;
+            }
+        }
+    }
+
     prim() {
         let [nowX, nowY] = this.now;
         if (nowX % 2 === 1) nowX--;
@@ -191,24 +200,21 @@ class Maze {
         return this.map;
     }
 
-    move(dir) {
+    playerMove(dir) {
         let nextPos = [this.now[0] + dir[0], this.now[1] + dir[1]];
         if (this.isSecurityScope(nextPos) && this.getMap(nextPos)) {
             switch (this.getMap(nextPos)) {
-                case 2:
+                case INFO.TRANSFER:
                     while (true) {
                         nextPos = [this.random(0, this.x - 1), this.random(0, this.y - 1)];
                         if (this.getMap(nextPos) === INFO.ROAD) break;
                     }
                     break;
-                case 3:
-                    this.stop();
-                    if (confirm("恭喜通关！\n是否继续以当前设置开始新的迷宫？")) {
-                        this.stop();
-                        this.start();
-                    } else {
-                        options.style.display = "block";
-                    }
+                case INFO.EXIT:
+                    this.gameOver("恭喜通关！");
+                    return;
+                case INFO.MONSTER:
+                    this.gameOver("你被丧尸感染，游戏结束！");
                     return;
             }
 
@@ -218,6 +224,78 @@ class Maze {
 
             this.draw();
         }
+    }
+
+    monsterMove(who, monsterXY) {
+        let playerDir = null;
+
+        for (let curDir of this.dir) {
+            let nextPos = monsterXY;
+            let flag = true;
+
+            while (flag) {
+                nextPos = this.turnTo(nextPos, curDir);
+
+                if (!this.isSecurityScope(nextPos)) break;
+
+                switch (this.getMap(nextPos)) {
+                    case INFO.PLAYER:
+                        playerDir = curDir;
+                        flag = false;
+                        break;
+                    case INFO.WALL:
+                    case INFO.TRANSFER:
+                    case INFO.EXIT:
+                        flag = false;
+                        break;
+                }
+            }
+
+            if (playerDir) {
+                this.monsterQueue[who] = setTimeout(() => this.monsterChase(who, monsterXY, playerDir), 200);
+                return;
+            }
+        }
+
+        let dirs = [...this.dir];
+        while (dirs.length > 0) {
+            let curDir = dirs.splice(this.random(0, dirs.length - 1), 1)[0];
+            let nextPos = this.turnTo(monsterXY, curDir);
+
+            if (!this.isSecurityScope(nextPos)) continue;
+
+            switch (this.getMap(nextPos)) {
+                case INFO.ROAD:
+                case INFO.MONSTER:
+                    this.setMap(monsterXY, INFO.ROAD);
+                    this.setMap(nextPos, INFO.MONSTER);
+                    this.draw();
+                    this.monsterQueue[who] = setTimeout(() => this.monsterMove(who, nextPos), 1000);
+                    return;
+                case INFO.PLAYER:
+                    this.gameOver("你被丧尸感染，游戏结束！");
+                    return;
+            }
+        }
+    }
+
+    monsterChase(who, monsterXY, playerDir) {
+        let nextPos = this.turnTo(monsterXY, playerDir);
+        if (this.isSecurityScope(nextPos)) {
+            switch (this.getMap(nextPos)) {
+                case INFO.ROAD:
+                case INFO.MONSTER:
+                    this.setMap(monsterXY, INFO.ROAD);
+                    this.setMap(nextPos, INFO.MONSTER);
+                    this.draw();
+                    this.monsterQueue[who] = setTimeout(() => this.monsterChase(who, nextPos, playerDir), 200);
+                    return;
+                case INFO.PLAYER:
+                    this.gameOver("你被丧尸感染，游戏结束！");
+                    return;
+            }
+        }
+        this.monsterQueue[who] = setTimeout(() => this.monsterMove(who, monsterXY), 200);
     }
 
     draw() {
@@ -243,7 +321,10 @@ class Maze {
         this.prim();
         this.setStartAndEnd();
         this.setRandomTransfer();
+        this.setMonsters();
         this.draw();
+
+        window.addEventListener("keydown", keyDown, true);
 
         if (this.interval) {
             this.timer = setTimeout(() => this.start(), this.interval * 1000);
@@ -253,10 +334,31 @@ class Maze {
     stop() {
         clearTimeout(this.timer);
         this.timer = null;
+
+        for (let who = 0; who < this.monsterQueue.length; who++) {
+            clearTimeout(this.monsterQueue[who]);
+        }
+        this.monsterQueue = [];
+    }
+
+    gameOver(msg) {
+        window.removeEventListener("keydown", keyDown, true);
+
+        this.stop();
+        if (confirm(msg + "\n是否继续以当前设置开始新的迷宫？")) {
+            this.start();
+        } else {
+            options.style.display = "block";
+        }
     }
 }
 
-window.addEventListener("keydown", (event) => {
+function limit(row, col, num) {
+    let max = Math.floor(row / 2) * Math.floor(col / 2);
+    return Math.min(max, num);
+}
+
+function keyDown(event) {
     if (event.defaultPrevented) return; // Do nothing if event already handled
     if (!maze) return;
 
@@ -264,22 +366,22 @@ window.addEventListener("keydown", (event) => {
         case "KeyS":
         case "ArrowDown":
             // Handle "back"
-            maze.move([0, 1]);
+            maze.playerMove([0, 1]);
             break;
         case "KeyW":
         case "ArrowUp":
             // Handle "forward"
-            maze.move([0, -1]);
+            maze.playerMove([0, -1]);
             break;
         case "KeyA":
         case "ArrowLeft":
             // Handle "turn left"
-            maze.move([-1, 0]);
+            maze.playerMove([-1, 0]);
             break;
         case "KeyD":
         case "ArrowRight":
             // Handle "turn right"
-            maze.move([1, 0]);
+            maze.playerMove([1, 0]);
             break;
         case "Tab":
         case "Escape":
@@ -292,4 +394,4 @@ window.addEventListener("keydown", (event) => {
         // as long as the user isn't trying to move focus away
         // event.preventDefault();
     }
-}, true);
+}
