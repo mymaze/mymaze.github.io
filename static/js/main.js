@@ -100,8 +100,8 @@ class Maze {
 
     resetMap() {
         if (this.multiple > 1) {
-            let extendRow = this.y * this.multiple;
-            let extendCol = this.x * this.multiple;
+            let extendRow = this.row * this.multiple;
+            let extendCol = this.col * this.multiple;
 
             this.y = extendRow % 2 ? extendRow : extendRow - 1;
             this.x = extendCol % 2 ? extendCol : extendCol - 1;
@@ -330,6 +330,7 @@ class Maze {
         let viewX, viewY;
         let halfCol = Math.ceil(this.col / 2);
         let halfRow = Math.ceil(this.row / 2);
+        this.canvas.style.borderColor = "white";
 
         if (this.now[0] < halfCol) {
             viewX = 0;
