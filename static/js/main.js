@@ -395,7 +395,9 @@ class Maze {
         let viewX, viewY;
         let halfCol = Math.ceil(this.col / 2);
         let halfRow = Math.ceil(this.row / 2);
-        this.canvas.style.borderColor = "white";
+        let blankAreaColor = "white";
+
+        this.canvas.style.borderColor = this.multiple === 1 ? this.legend[INFO.WALL] : blankAreaColor;
 
         if (this.now[0] < halfCol) {
             viewX = 0;
@@ -405,8 +407,8 @@ class Maze {
             this.canvas.style.borderRightColor = this.legend[INFO.WALL];
         } else {
             viewX = this.now[0] - halfCol;
-            this.canvas.style.borderRightColor = "white";
-            this.canvas.style.borderLeftColor = "white";
+            this.canvas.style.borderRightColor = blankAreaColor;
+            this.canvas.style.borderLeftColor = blankAreaColor;
         }
 
         if (this.now[1] < halfRow) {
@@ -417,8 +419,8 @@ class Maze {
             this.canvas.style.borderBottomColor = this.legend[INFO.WALL];
         } else {
             viewY = this.now[1] - halfRow;
-            this.canvas.style.borderTopColor = "white";
-            this.canvas.style.borderBottomColor = "white";
+            this.canvas.style.borderTopColor = blankAreaColor;
+            this.canvas.style.borderBottomColor = blankAreaColor;
         }
 
         for (let y = 0; y < this.row; y++) {
