@@ -24,6 +24,12 @@ const INFO = {
     PLAYER: 5
 }
 
+const MESSAGE = {
+    VICTORY: "恭喜通关！",
+    FAIL: "你被丧尸感染，游戏结束！",
+    NEW_GAME: "\n是否继续以当前设置开始新的迷宫？"
+}
+
 const DIR = {
     left: [-1, 0],
     right: [1, 0],
@@ -242,10 +248,10 @@ class Maze {
                     }
                     break;
                 case INFO.EXIT:
-                    this.gameOver("恭喜通关！");
+                    this.gameOver(MESSAGE.VICTORY);
                     return;
                 case INFO.MONSTER:
-                    this.gameOver("你被丧尸感染，游戏结束！");
+                    this.gameOver(MESSAGE.FAIL);
                     return;
             }
 
@@ -300,7 +306,7 @@ class Maze {
                     this.monsterQueue[who] = setTimeout(() => this.monsterMove(who, nextPos), 1000);
                     return;
                 case INFO.PLAYER:
-                    this.gameOver("你被丧尸感染，游戏结束！");
+                    this.gameOver(MESSAGE.FAIL);
                     return;
             }
         }
@@ -319,7 +325,7 @@ class Maze {
                     this.monsterQueue[who] = setTimeout(() => this.monsterChase(who, nextPos, playerDir), 100);
                     return;
                 case INFO.PLAYER:
-                    this.gameOver("你被丧尸感染，游戏结束！");
+                    this.gameOver(MESSAGE.FAIL);
                     return;
             }
         }
@@ -406,7 +412,7 @@ class Maze {
 
     gameOver(msg) {
         this.stop();
-        if (confirm(msg + "\n是否继续以当前设置开始新的迷宫？")) {
+        if (confirm(msg + MESSAGE.NEW_GAME)) {
             this.start();
         } else {
             options.style.display = "block";
