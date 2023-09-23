@@ -21,7 +21,8 @@ const INFO = {
     TRANSFER: 2,
     EXIT: 3,
     MONSTER: 4,
-    PLAYER: 5
+    PLAYER: 5,
+    TIPS: 6
 }
 
 const MESSAGE = {
@@ -234,6 +235,64 @@ class Maze {
             }
         }
         return this.map;
+    }
+
+    dfsHelper(curPos, dest2source) {
+        for (let curDir in DIR) {
+            let nextPos = this.turnTo(curPos, DIR[curDir]);
+
+            if (this.isSecurityScope(nextPos)) {
+                switch (this.getMap(nextPos)) {
+                    case INFO.EXIT:
+                        dest2source[nextPos] = [curPos, curDir];
+                        return dest2source;
+                    case INFO.ROAD:
+                        if (!(nextPos in dest2source)) {
+                            dest2source[nextPos] = [curPos, curDir];
+
+                            if (this.dfsHelper(nextPos, dest2source)) {
+                                return dest2source;
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+    }
+
+    dfs() {
+        let dest2source = this.dfsHelper(this.now, {});
+        let posPath = [];
+        let dirPath = [];
+        let curPos = this.end;
+
+        while (curPos in dest2source) {
+            let [parentPos, parentDir] = dest2source[curPos];
+
+            posPath.push(parentPos);
+            dirPath.push(parentDir);
+
+            curPos = parentPos;
+        }
+
+        posPath.reverse();
+        dirPath.reverse();
+
+        return [posPath, dirPath];
+    }
+
+    tips() {
+        let mapBak = JSON.parse(JSON.stringify(this.map));
+
+        let [posPath, dirPath] = this.dfs();
+
+        posPath.shift();
+        for (let pos of posPath) {
+            this.setMap(pos, INFO.TIPS);
+        }
+
+        this.draw();
+        this.map = mapBak;
     }
 
     playerMove(dir) {
@@ -450,6 +509,9 @@ function keyDown(event) {
         case "ArrowRight":
             // Handle "turn right"
             maze.playerMove(DIR.right);
+            break;
+        case "NumpadSubtract":
+            maze.tips();
             break;
         case "Tab":
         case "Escape":
