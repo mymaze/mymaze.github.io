@@ -247,6 +247,7 @@ class Maze {
                         dest2source[nextPos] = [curPos, curDir];
                         return dest2source;
                     case INFO.ROAD:
+                    case INFO.MONSTER:
                         if (!(nextPos in dest2source)) {
                             dest2source[nextPos] = [curPos, curDir];
 
@@ -513,6 +514,7 @@ function keyDown(event) {
             maze.playerMove(DIR.right);
             break;
         case "NumpadSubtract":
+        case "Minus":
             maze.tips();
             break;
         case "Tab":
