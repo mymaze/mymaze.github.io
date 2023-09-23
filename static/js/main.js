@@ -103,6 +103,7 @@ class Maze {
         this.map = [];
         this.monsterQueue = [];
         this.timer = null;
+        this.autoMoveTimer = null;
     }
 
     resetMap() {
@@ -296,6 +297,20 @@ class Maze {
         this.map = mapBak;
     }
 
+    authMoveHelper(dirPath) {
+        this.playerMove(DIR[dirPath.shift()]);
+
+        if (dirPath.length > 0) {
+            let speed = this.random(100, 250);
+            this.autoMoveTimer = setTimeout(() => this.authMoveHelper(dirPath), speed);
+        }
+    }
+
+    autoMove() {
+        let [posPath, dirPath] = this.dfs();
+        this.authMoveHelper(dirPath);
+    }
+
     playerMove(dir) {
         let nextPos = this.turnTo(this.now, dir);
 
@@ -460,16 +475,29 @@ class Maze {
         }
     }
 
-    stop() {
-        window.removeEventListener("keydown", keyDown, true);
+    stopAutoMove() {
+        clearTimeout(this.autoMoveTimer);
+        this.autoMoveTimer = null;
+    }
 
+    stopConvert() {
         clearTimeout(this.timer);
         this.timer = null;
+    }
 
+    stopMonsterMove() {
         for (let who = 0; who < this.monsterQueue.length; who++) {
             clearTimeout(this.monsterQueue[who]);
         }
         this.monsterQueue = [];
+    }
+
+    stop() {
+        window.removeEventListener("keydown", keyDown, true);
+
+        this.stopAutoMove();
+        this.stopConvert();
+        this.stopMonsterMove();
     }
 
     gameOver(msg) {
@@ -491,6 +519,8 @@ function limit(row, col, num) {
 function keyDown(event) {
     if (event.defaultPrevented) return; // Do nothing if event already handled
     if (!maze) return;
+
+    if (maze.autoMoveTimer) maze.stopAutoMove();
 
     switch (event.code) {
         case "KeyS":
@@ -516,6 +546,10 @@ function keyDown(event) {
         case "NumpadSubtract":
         case "Minus":
             maze.tips();
+            break;
+        case "NumpadAdd":
+        case "Equal":
+            maze.autoMove();
             break;
         case "Tab":
         case "Escape":
