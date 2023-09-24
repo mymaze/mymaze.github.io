@@ -1,4 +1,5 @@
 const
+    bgmAudio = document.getElementById("bgmAudio"),
     canvas = document.getElementById("canvas"),
     context = canvas.getContext("2d"),
     options = document.getElementById("options"),
@@ -49,6 +50,30 @@ extendCheckBox.onclick = function () {
     convertCheckBox.checked = false;
 }
 
+function setBGM() {
+    let filename = "default.mp3";
+
+    switch (true) {
+        case extendCheckBox.checked:
+            filename = "extend.mp3";
+            break;
+        case monsterCheckBox.checked:
+            filename = "monster.mp3";
+            break;
+        case nightCheckBox.checked:
+            filename = "night.mp3";
+            break;
+        case convertCheckBox.checked:
+            filename = "convert.mp3";
+            break;
+        case transferCheckBox.checked:
+            filename = "transfer.mp3";
+            break;
+    }
+
+    bgmAudio.src = `static/audio/${filename}`;
+}
+
 function startGame() {
     let legend = {};
     for (let key in INFO) {
@@ -78,6 +103,8 @@ function startGame() {
 
     options.style.display = "none";
     canvas.style.display = "block";
+
+    setBGM();
 
     return false;
 }
