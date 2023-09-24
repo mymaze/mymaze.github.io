@@ -39,3 +39,8 @@ input {
     position: relative;
     left: 35%;
 }
+
+.icon {
+    width: 25px;
+    height: 25px;
+}

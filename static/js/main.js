@@ -4,6 +4,7 @@ const
     context = canvas.getContext("2d"),
     options = document.getElementById("options"),
     diamondInput = document.getElementById("diamondInput"),
+    useIconCheckBox = document.getElementById("useIconCheckBox"),
     transferCheckBox = document.getElementById("transferCheckBox"),
     transferInput = document.getElementById("transferInput"),
     convertCheckBox = document.getElementById("convertCheckBox"),
@@ -80,6 +81,11 @@ function startGame() {
         legend[INFO[key]] = document.getElementById("color" + INFO[key]).value;
     }
 
+    let icon = {};
+    for (let key in INFO) {
+        icon[INFO[key]] = document.getElementById("icon" + INFO[key]);
+    }
+
     let size = parseInt(diamondInput.value);
     // 迷宫生成算法需要行列均为奇数
     let row = Math.floor((window.innerHeight - size * 2) / size);
@@ -91,6 +97,7 @@ function startGame() {
     canvas.width = col * size;
     canvas.height = row * size;
 
+    let useIcon = !!useIconCheckBox.checked;
     let multiple = extendCheckBox.checked ? parseInt(extendInput.value) : 1;
     let interval = convertCheckBox.checked ? parseInt(convertInput.value) : 0;
     let transferCount = transferCheckBox.checked ? limit(row, col, parseInt(transferInput.value)) : 0;
@@ -98,7 +105,7 @@ function startGame() {
     let monsters = monsterCheckBox.checked ? limit(row, col, parseInt(monsterInput.value)) : 0;
 
     if (maze) maze.stop();
-    maze = new Maze(canvas, context, row, col, size, legend, transferCount, interval, viewGrid, monsters, multiple);
+    maze = new Maze(canvas, context, row, col, size, legend, icon, transferCount, interval, viewGrid, monsters, multiple, useIcon);
     maze.start();
 
     options.style.display = "none";
@@ -110,7 +117,7 @@ function startGame() {
 }
 
 class Maze {
-    constructor(canvas, context, row, col, size, legend, transferCount, interval, viewGrid, monsters, multiple) {
+    constructor(canvas, context, row, col, size, legend, icon, transferCount, interval, viewGrid, monsters, multiple, useIcon) {
         this.canvas = canvas;
         this.context = context;
         this.y = row;
@@ -119,11 +126,13 @@ class Maze {
         this.col = col;
         this.size = size;
         this.legend = legend;
+        this.icon = icon;
         this.transferCount = transferCount;
         this.interval = interval;
         this.viewGrid = viewGrid;
         this.monsters = monsters;
         this.multiple = multiple;
+        this.useIcon = useIcon;
 
         this.now = [0, 0];
         this.end = [col - 1, row - 1];
@@ -435,7 +444,9 @@ class Maze {
     }
 
     draw() {
-        let viewX, viewY;
+        if (this.useIcon) context.clearRect(0, 0, this.col * this.size, this.row * this.size);
+
+        let viewX, viewY, iconObj;
         let halfCol = Math.ceil(this.col / 2);
         let halfRow = Math.ceil(this.row / 2);
         let blankAreaColor = "white";
@@ -479,10 +490,18 @@ class Maze {
                         || mapY > (this.now[1] + this.viewGrid)
                     )) {
                     this.context.fillStyle = this.legend[INFO.MASK];
+                    iconObj = this.icon[INFO.MASK];
                 } else {
-                    this.context.fillStyle = this.legend[this.getMap([mapX, mapY])];
+                    let mapValue = this.getMap([mapX, mapY]);
+                    this.context.fillStyle = this.legend[mapValue];
+                    iconObj = this.icon[mapValue];
                 }
-                this.context.fillRect(x * this.size, y * this.size, this.size, this.size);
+
+                if (this.useIcon) {
+                    this.context.drawImage(iconObj, x * this.size, y * this.size, this.size, this.size);
+                } else {
+                    this.context.fillRect(x * this.size, y * this.size, this.size, this.size);
+                }
             }
         }
     }

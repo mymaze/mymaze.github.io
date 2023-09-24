@@ -27,6 +27,10 @@
                 <td><label>调整 <input type="number" min="5" max="100" value="20" required id="diamondInput"> px</label></td>
             </tr>
             <tr>
+                <td><label><input type="checkbox" id="useIconCheckBox"> 使用图标</label></td>
+                <td>迷宫使用图标渲染</td>
+            </tr>
+            <tr>
                 <td><label><input type="checkbox" id="transferCheckBox"> 随机传送</label></td>
                 <td><label>放置 <input type="number" min="1" max="99" value="3" id="transferInput"> 个</label></td>
             </tr>
@@ -55,42 +59,51 @@
 
         <table border="1">
             <tr>
-                <td colspan="2">WASD / ↑↓←→ 移动</td>
+                <td colspan="3">WASD / ↑↓←→ 移动</td>
             </tr>
             <tr>
                 <th>颜色</th>
+                <th>图标</th>
                 <th>描述</th>
             </tr>
             <tr>
-                <td><input type="color" value="#808080" id="color-1"></td>
+                <td><input type="color" value="#C0C0C0" id="color-1"></td>
+                <td><img src="static/img/mask.svg" alt="mask" class="icon" id="icon-1"></td>
                 <td>蒙版</td>
             </tr>
             <tr>
-                <td><input type="color" value="#000000" id="color0"></td>
+                <td><input type="color" value="#808080" id="color0"></td>
+                <td><img src="static/img/wall.svg" alt="wall" class="icon" id="icon0"></td>
                 <td>围墙</td>
             </tr>
             <tr>
                 <td><input type="color" value="#FFFFFF" id="color1"></td>
+                <td><img src="static/img/road.png" alt="road" class="icon" id="icon1"></td>
                 <td>道路</td>
             </tr>
             <tr>
                 <td><input type="color" value="#FFFF00" id="color2"></td>
+                <td><img src="static/img/transfer.svg" alt="transfer" class="icon" id="icon2"></td>
                 <td>传送</td>
             </tr>
             <tr>
                 <td><input type="color" value="#00FF00" id="color3"></td>
+                <td><img src="static/img/exit.svg" alt="exit" class="icon" id="icon3"></td>
                 <td>出口</td>
             </tr>
             <tr>
                 <td><input type="color" value="#FF0000" id="color4"></td>
+                <td><img src="static/img/monster.svg" alt="monster" class="icon" id="icon4"></td>
                 <td>丧尸</td>
             </tr>
             <tr>
                 <td><input type="color" value="#0000FF" id="color5"></td>
+                <td><img src="static/img/player.svg" alt="player" class="icon" id="icon5"></td>
                 <td>玩家</td>
             </tr>
             <tr>
                 <td><input type="color" value="#FFA500" id="color6"></td>
+                <td><img src="static/img/tips.svg" alt="tips" class="icon" id="icon6"></td>
                 <td>提示</td>
             </tr>
         </table>
